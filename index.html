@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="index.css">
+    <title>Document</title>
+</head>
+<body>
+    <div id="#countdown-wrapper">
+        <canvas id="circle" width="200" height="200"></canvas>
+        <div id="countDown">00:00</div>
+        <input type="number" id="time" placeholder="Enter time in minutes">
+        <div id="flexed-btn">
+            <button id="start-btn" onclick="countDown()" >Start</button>
+            <button id="stop-btn" onclick="stopCount()">Stop</button>
+        </div>
+        <button id="reset-btn" onclick="resetCount()">Reset</button>
+        <h1 id="timeup-text"></h1>
+    </div>
+</body>
+<script>
+    const canvas = document.getElementById('circle');
+    const ctx = canvas.getContext('2d');
+    const countdownDiv = document.getElementById('countDown');
+    const timeInput = document.getElementById('time')
+    const startBtn = document.getElementById('start-btn');
+    const stopBtn = document.getElementById('stop-Btn')
+    const resetBtn = document.getElementById('reset-Btn')
+    const timeUp = document.getElementById('timeup-text')
+
+    let totalTime;
+    let remainingTime;
+    let animationInterval;
+    let isRunning = false;
+
+    if (localStorage.getItem('remainingTime')) {
+        remainingTime = parseInt(localStorage.getItem('remainingTime'));
+        totalTime = parseInt(localStorage.getItem('totalTime'));
+        if (remainingTime > 0) {
+            updateCountdownDisplay();
+        drawCircle(remainingTime / totalTime, getColorBaseonTime(remainingTime / totalTime));
+        resumeCountdown();
+        }
+
+        if (localStorage.getItem('timeInputValue')) {
+        timeInput.value = localStorage.getItem(timeInputValue);
+    }
+    }
+
+    drawGreyBackground();
+
+    function countDown() {
+        totalTime = parseInt(timeInput.value) * 60;
+        localStorage.setItem('timeInputValue', timeInput.value);
+        remainingTime = totalTime;
+        localStorage.setItem('totalTime', totalTime);
+        animationInterval = setInterval(updateCountdown, 1000);
+        drawCircle(1, 'green');
+        isRunning = true;
+    }
+
+    function stopCount() {
+        clearInterval(animationInterval)
+        isRunning = false;
+    }
+    function resetCount() {
+        resetCountDown();
+    }
+    function updateCountdown() {
+        remainingTime -= 1;
+        timeUp.innerHTML = '';
+        localStorage.setItem('remainingTime', remainingTime);
+        updateCountdownDisplay();
+        const percentageRemaining = remainingTime / totalTime;
+        drawCircle(percentageRemaining, getColorBaseonTime(percentageRemaining));
+
+        if (remainingTime <= 0) {
+            clearInterval(animationInterval);
+            timeUp.innerHTML = 'Time Up!!!';
+           resetCountDown(); 
+        }
+    }
+
+    function updateCountdownDisplay() {
+        const minutes = Math.floor(remainingTime / 60);
+        const seconds = remainingTime % 60;
+        countdownDiv.innerHTML = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
+    }
+
+    function getColorBaseonTime(percentageRemaining) {
+        if (percentageRemaining <= 0.1) {
+            return 'red';
+        } else if (percentageRemaining <= 0.25) {
+            return 'yellow';
+        } return 'green';
+    }
+    function drawCircle(percentage, color) {
+        const startAngle = 1.5 * Math.PI;
+        const endAngle = startAngle + 2 * Math.PI * percentage;
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        drawGreyBackground();
+
+        ctx.beginPath();
+        ctx.arc(canvas.width / 2, canvas.height /2, 90, 0, 2 * Math.PI);
+        ctx.lineWidth = 10;
+        ctx.strokeStyle = '#e6e6e6';
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.arc(canvas.width / 2, canvas.height /2, 90, startAngle, endAngle, false);
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 10;
+        ctx.stroke();
+    }
+    function drawGreyBackground() {
+        ctx.beginPath();
+        ctx.arc(canvas.width / 2, canvas.height /2, 90, 0, 2 * Math.PI);
+        ctx.strokeStyle = '#e6e6e6';
+        ctx.stroke();
+    }
+    function resetCountDown() {
+        clearInterval(animationInterval);
+        localStorage.removeItem('remainingTime');
+        localStorage.removeItem('totalTime');
+        localStorage.removeItem('timeInputValue')
+        remainingTime = 0;
+        totalTime = 0;
+        countdownDiv.innerHTML = '00.00';
+        timeInput.value = '';
+        timeInput.placeholder = 'Enter time in minutes';
+        drawGreyBackground();
+    }
+     function resumeCountdown() {
+        if (!isRunning && remainingTime > 0) {
+            clearInterval(animationInterval);
+            animationInterval = setInterval(updateCountdown, 1000);
+            isRunning = true;
+        }
+     }
+</script>
+</html>
+
